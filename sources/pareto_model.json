@@ -1,0 +1,18 @@
+{
+  "pareto_points": [
+    {
+      "threshold": 0.85,
+      "silence_duration_ms": 1200,
+      "prefix_padding_ms": 150,
+      "fpr": 0.0,
+      "tl_ms": 607.8
+    },
+    {
+      "threshold": 0.85,
+      "silence_duration_ms": 775,
+      "prefix_padding_ms": 300,
+      "fpr": 0.1053,
+      "tl_ms": 594.2
+    }
+  ]
+}

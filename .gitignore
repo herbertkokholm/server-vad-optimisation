@@ -1,0 +1,22 @@
+# Secrets
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual env
+venv/
+.venv/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# LaTeX build
+*.aux
+*.log
+*.out
+*.toc
