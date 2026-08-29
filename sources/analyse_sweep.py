@@ -107,7 +107,18 @@ def flatten_record(rec: dict) -> dict:
         "prefix_ms": vad.get("prefix_padding_ms"),
         # Primary DVs
         "fpr": openai.get("fpr"),
+        # tl_ms: response latency as reported by the API, measured from
+        # speech_stopped. speech_stopped fires only AFTER server-VAD has
+        # waited silence_duration_ms, so this metric excludes the end-of-turn
+        # wait for the very parameter under optimisation. Kept for transparency.
         "tl_ms": openai.get("response_latency_ms"),
+        # ptl_ms: user-perceived latency from the acoustic end of the utterance.
+        # Adds the VAD wait back in. This is the correct optimisation target and
+        # the one all Pareto/latency claims should rest on.
+        "ptl_ms": (
+            (vad.get("silence_duration_ms") or 0)
+            + (openai.get("response_latency_ms") or 0)
+        ),
         # Secondary DVs
         "ir": openai.get("interruptions"),
         "response_count": openai.get("response_count"),
@@ -140,7 +151,7 @@ def apply_filters(df: pd.DataFrame, cfg: dict) -> pd.DataFrame:
     df = df[~df["warmup"].fillna(False)]
 
     # Drop rows missing primary DVs
-    df = df.dropna(subset=["fpr", "tl_ms", "threshold", "silence_ms", "prefix_ms"])
+    df = df.dropna(subset=["fpr", "tl_ms", "ptl_ms", "threshold", "silence_ms", "prefix_ms"])
 
     n_after = len(df)
     print(
@@ -328,9 +339,14 @@ def fig1_response_surfaces(
 
 
 def fig2_pareto_front(df: pd.DataFrame, output_dir: Path):
-    """Figure 2: Pareto front in FPR–TL objective space."""
+    """Figure 2: Pareto front in FPR–perceived-latency objective space.
+
+    Optimisation target is ptl_ms (perceived latency = silence_duration_ms +
+    measured response latency). The measured-TL front is drawn faintly for
+    reference, to make the effect of the latency correction visible.
+    """
     fpr = df["fpr"].values
-    tl = df["tl_ms"].values
+    tl = df["ptl_ms"].values
     is_pareto = pareto_front(fpr, tl)
 
     # Sort Pareto points for line drawing
@@ -368,8 +384,8 @@ def fig2_pareto_front(df: pd.DataFrame, output_dir: Path):
     )
 
     ax.set_xlabel("False Positive Rate (FPR)")
-    ax.set_ylabel("Turn Latency (ms)")
-    ax.set_title("Pareto Front: FPR vs Turn Latency")
+    ax.set_ylabel("Perceived latency (ms)")
+    ax.set_title("Pareto Front: FPR vs Perceived Latency")
     ax.legend(frameon=False)
     fig.tight_layout()
     path = output_dir / "fig2_pareto_front.png"
@@ -570,15 +586,24 @@ def write_pareto_model(df: pd.DataFrame, output_dir: Path):
     Write Pareto-optimal configurations to JSON for use by adaptive_tuner.py.
 
     Output: figures/pareto_model.json
-    Schema: {"pareto_points": [{"threshold", "silence_duration_ms",
-                                 "prefix_padding_ms", "fpr", "tl_ms"}, ...]}
+    Schema: {"latency_metric": "perceived_latency_ms",
+             "pareto_points": [{"threshold", "silence_duration_ms",
+                                 "prefix_padding_ms", "fpr", "tl_ms",
+                                 "perceived_latency_ms"}, ...]}
+
+    The front is selected on perceived latency (ptl_ms = silence + measured TL),
+    which is the user-relevant metric. Each point still carries the measured
+    tl_ms so a consumer observing raw response_latency_ms at run time can
+    reconstruct either quantity. Consumers optimising latency should read
+    perceived_latency_ms (and add silence_duration_ms to any raw run-time
+    response_latency_ms before comparing).
     """
     fpr = df["fpr"].values
-    tl = df["tl_ms"].values
-    is_pareto = pareto_front(fpr, tl)
+    ptl = df["ptl_ms"].values
+    is_pareto = pareto_front(fpr, ptl)
 
     pareto_df = df[is_pareto][
-        ["threshold", "silence_ms", "prefix_ms", "fpr", "tl_ms"]
+        ["threshold", "silence_ms", "prefix_ms", "fpr", "tl_ms", "ptl_ms"]
     ].sort_values("fpr")
 
     points = [
@@ -588,16 +613,23 @@ def write_pareto_model(df: pd.DataFrame, output_dir: Path):
             "prefix_padding_ms": int(row["prefix_ms"]),
             "fpr": round(float(row["fpr"]), 6),
             "tl_ms": round(float(row["tl_ms"]), 2),
+            "perceived_latency_ms": round(float(row["ptl_ms"]), 2),
         }
         for _, row in pareto_df.iterrows()
     ]
 
     path = output_dir / "pareto_model.json"
-    path.write_text(json.dumps({"pareto_points": points}, indent=2))
+    path.write_text(
+        json.dumps(
+            {"latency_metric": "perceived_latency_ms", "pareto_points": points},
+            indent=2,
+        )
+    )
     print(f"  Saved: {path.name}  ({len(points)} Pareto-optimal point(s))")
 
 
-def write_summary(df: pd.DataFrame, rsm_fpr: dict, rsm_tl: dict, output_dir: Path):
+def write_summary(df: pd.DataFrame, rsm_fpr: dict, rsm_tl: dict, output_dir: Path,
+                  rsm_ptl: dict = None):
     """Write a plain-text summary table for quick inspection."""
     lines = [
         "VAD SWEEP ANALYSIS SUMMARY",
@@ -606,42 +638,57 @@ def write_summary(df: pd.DataFrame, rsm_fpr: dict, rsm_tl: dict, output_dir: Pat
         f"Annotation filter: {CONFIG['annotation_filter']}",
         "",
         "Primary outcome descriptives:",
-        f"  FPR   mean={df['fpr'].mean():.3f}  sd={df['fpr'].std():.3f}  "
+        f"  FPR              mean={df['fpr'].mean():.3f}  sd={df['fpr'].std():.3f}  "
         f"min={df['fpr'].min():.3f}  max={df['fpr'].max():.3f}",
-        f"  TL    mean={df['tl_ms'].mean():.1f}ms  sd={df['tl_ms'].std():.1f}  "
+        f"  TL (measured)    mean={df['tl_ms'].mean():.1f}ms  sd={df['tl_ms'].std():.1f}  "
         f"min={df['tl_ms'].min():.1f}  max={df['tl_ms'].max():.1f}",
+        f"  Perceived latency mean={df['ptl_ms'].mean():.1f}ms  sd={df['ptl_ms'].std():.1f}  "
+        f"min={df['ptl_ms'].min():.1f}  max={df['ptl_ms'].max():.1f}",
+        "",
+        "  NOTE: measured TL is taken from speech_stopped, which fires only after",
+        "  server-VAD has already waited silence_duration_ms. Perceived latency adds",
+        "  that wait back in and is the metric all latency claims rest on.",
         "",
         "RSM model fit:",
-        f"  FPR model R²  = {rsm_fpr['r2']:.4f}",
-        f"  TL  model R²  = {rsm_tl['r2']:.4f}",
+        f"  FPR model R²                = {rsm_fpr['r2']:.4f}",
+        f"  TL (measured) model R²      = {rsm_tl['r2']:.4f}",
+    ]
+    if rsm_ptl is not None:
+        lines.append(f"  Perceived latency model R²  = {rsm_ptl['r2']:.4f}")
+    lines += [
         "",
         "Significant RSM terms (p < 0.005, Bonferroni):",
     ]
 
-    for rsm, label in [(rsm_fpr, "FPR"), (rsm_tl, "TL")]:
+    rsm_iter = [(rsm_fpr, "FPR"), (rsm_tl, "TL(measured)")]
+    if rsm_ptl is not None:
+        rsm_iter.append((rsm_ptl, "PerceivedLatency"))
+    for rsm, label in rsm_iter:
         sig = [k for k, v in rsm["p_values"].items() if v < 0.005 and k != "1"]
         lines.append(f"  {label}: {', '.join(sig) if sig else 'none'}")
 
     fpr = df["fpr"].values
-    tl = df["tl_ms"].values
-    is_pareto = pareto_front(fpr, tl)
+    ptl = df["ptl_ms"].values
+    is_pareto = pareto_front(fpr, ptl)
     lines += [
         "",
-        f"Pareto-optimal runs: {is_pareto.sum()} of {len(df)}",
+        f"Pareto-optimal runs (FPR vs perceived latency): {is_pareto.sum()} of {len(df)}",
     ]
 
-    pareto_df = df[is_pareto][["threshold", "silence_ms", "prefix_ms", "fpr", "tl_ms"]]
-    pareto_df = pareto_df.sort_values("fpr")
+    pareto_df = df[is_pareto][
+        ["threshold", "silence_ms", "prefix_ms", "fpr", "tl_ms", "ptl_ms"]
+    ].sort_values("fpr")
     lines.append("")
     lines.append("Pareto front configurations:")
     lines.append(
         f"  {'threshold':>10} {'silence_ms':>12} {'prefix_ms':>10} "
-        f"{'FPR':>8} {'TL_ms':>8}"
+        f"{'FPR':>8} {'TL_meas':>9} {'Perceived':>10}"
     )
     for _, row in pareto_df.iterrows():
         lines.append(
             f"  {row['threshold']:>10.3f} {row['silence_ms']:>12.0f} "
-            f"{row['prefix_ms']:>10.0f} {row['fpr']:>8.4f} {row['tl_ms']:>8.1f}"
+            f"{row['prefix_ms']:>10.0f} {row['fpr']:>8.4f} {row['tl_ms']:>9.1f} "
+            f"{row['ptl_ms']:>10.1f}"
         )
 
     path = output_dir / "summary.txt"
@@ -704,8 +751,10 @@ def main():
     print("\nFitting RSM models...")
     rsm_fpr = fit_rsm(df, "fpr", covariates=["silence_ratio", "speaker"])
     rsm_tl = fit_rsm(df, "tl_ms", covariates=["silence_ratio", "speaker"])
-    print(f"  FPR R² = {rsm_fpr['r2']:.4f}")
-    print(f"  TL  R² = {rsm_tl['r2']:.4f}")
+    rsm_ptl = fit_rsm(df, "ptl_ms", covariates=["silence_ratio", "speaker"])
+    print(f"  FPR R²               = {rsm_fpr['r2']:.4f}")
+    print(f"  TL (measured) R²     = {rsm_tl['r2']:.4f}")
+    print(f"  Perceived latency R² = {rsm_ptl['r2']:.4f}")
 
     # Plots
     print(f"\nGenerating figures -> {output_dir}/")
@@ -718,7 +767,7 @@ def main():
     fig5_design_coverage(df, output_dir)
     if "recording_date" in df.columns and df["recording_date"].notna().any():
         fig6_day_effect(df, output_dir)
-    write_summary(df, rsm_fpr, rsm_tl, output_dir)
+    write_summary(df, rsm_fpr, rsm_tl, output_dir, rsm_ptl=rsm_ptl)
 
     print(
         f"\nDone. {len(list(output_dir.glob('*.png')))} figures written to {output_dir}/"

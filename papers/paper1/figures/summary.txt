@@ -1,0 +1,30 @@
+VAD SWEEP ANALYSIS SUMMARY
+==================================================
+Runs included:  76
+Annotation filter: all
+
+Primary outcome descriptives:
+  FPR              mean=0.165  sd=0.096  min=0.000  max=0.444
+  TL (measured)    mean=776.9ms  sd=185.1  min=594.2  max=1697.0
+  Perceived latency mean=1551.9ms  sd=353.0  min=959.7  max=2601.9
+
+  NOTE: measured TL is taken from speech_stopped, which fires only after
+  server-VAD has already waited silence_duration_ms. Perceived latency adds
+  that wait back in and is the metric all latency claims rest on.
+
+RSM model fit:
+  FPR model R²                = 0.3532
+  TL (measured) model R²      = 0.0787
+  Perceived latency model R²  = 0.7465
+
+Significant RSM terms (p < 0.005, Bonferroni):
+  FPR: x2
+  TL(measured): none
+  PerceivedLatency: x2
+
+Pareto-optimal runs (FPR vs perceived latency): 2 of 76
+
+Pareto front configurations:
+   threshold   silence_ms  prefix_ms      FPR   TL_meas  Perceived
+       0.625          775        300   0.0000     670.5     1445.5
+       0.625          350        300   0.0556     609.7      959.7
