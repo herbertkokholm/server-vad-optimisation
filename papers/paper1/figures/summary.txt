@@ -13,9 +13,9 @@ Primary outcome descriptives:
   that wait back in and is the metric all latency claims rest on.
 
 RSM model fit:
-  FPR model R²                = 0.3532
-  TL (measured) model R²      = 0.0787
-  Perceived latency model R²  = 0.7465
+  FPR model R²                = 0.3533
+  TL (measured) model R²      = 0.1446
+  Perceived latency model R²  = 0.7647
 
 Significant RSM terms (p < 0.005, Bonferroni):
   FPR: x2

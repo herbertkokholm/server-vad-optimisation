@@ -175,6 +175,16 @@ def code_variables(df: pd.DataFrame) -> pd.DataFrame:
     df["x3"] = (df["prefix_ms"] - df["prefix_ms"].mean()) / (
         df["prefix_ms"].std() + 1e-9
     )
+    # Binary recording-day covariate: 0 for the earliest day, 1 for the next.
+    # Entered as a linear covariate to check for between-day drift (vocal
+    # fatigue, server-side inference variation, etc.). Only meaningful when
+    # more than one recording date is present.
+    if "recording_date" in df.columns and df["recording_date"].notna().any():
+        days = sorted(df["recording_date"].dropna().unique())
+        day_map = {d: float(i) for i, d in enumerate(days)}
+        df["day"] = df["recording_date"].map(day_map).fillna(0.0)
+    else:
+        df["day"] = 0.0
     return df
 
 
@@ -304,6 +314,14 @@ def fig1_response_surfaces(
         ),
     ]:
         X_poly_grid = rsm["poly"].transform(X_grid)
+        # If the model was fitted with extra linear covariates (e.g. day,
+        # silence_ratio) beyond the 3 design factors, hold them at 0 (their
+        # coded/centred reference) so the surface is drawn at that reference.
+        n_extra = rsm["model"].coef_.shape[0] - X_poly_grid.shape[1]
+        if n_extra > 0:
+            X_poly_grid = np.hstack(
+                [X_poly_grid, np.zeros((X_poly_grid.shape[0], n_extra))]
+            )
         Z = rsm["model"].predict(X_poly_grid).reshape(T.shape)
 
         cs = ax.contourf(
@@ -776,9 +794,9 @@ def main():
 
     # Fit RSM
     print("\nFitting RSM models...")
-    rsm_fpr = fit_rsm(df, "fpr", covariates=["silence_ratio", "speaker"])
-    rsm_tl = fit_rsm(df, "tl_ms", covariates=["silence_ratio", "speaker"])
-    rsm_ptl = fit_rsm(df, "ptl_ms", covariates=["silence_ratio", "speaker"])
+    rsm_fpr = fit_rsm(df, "fpr", covariates=["silence_ratio", "day"])
+    rsm_tl = fit_rsm(df, "tl_ms", covariates=["silence_ratio", "day"])
+    rsm_ptl = fit_rsm(df, "ptl_ms", covariates=["silence_ratio", "day"])
     print(f"  FPR R²               = {rsm_fpr['r2']:.4f}")
     print(f"  TL (measured) R²     = {rsm_tl['r2']:.4f}")
     print(f"  Perceived latency R² = {rsm_ptl['r2']:.4f}")
