@@ -2,8 +2,8 @@
 
 Manuscript accompanying this repository's Phase 1 methodology:
 
-> *Voice Activity Detection for Conversational AI in Clinical Simulation-Based
-> Learning: An Empirical Optimisation Framework*
+> *Perceived Turn Latency in Server-VAD Conversational Systems:
+> A False-Positive–Latency Trade-off from Silence-Duration Tuning*
 
 Submission in progress. The preprint and citation details will be added to
 this folder once available.

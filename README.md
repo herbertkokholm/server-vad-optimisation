@@ -20,9 +20,9 @@ This repository has grown across two research phases:
 
 This repository contains the open-source implementation accompanying the paper:
 
-> *Voice Activity Detection for Conversational AI in Clinical Simulation-Based
-> Learning: An Empirical Optimisation Framework*
-> — submitted to Computer Speech & Language (under review)
+> *Perceived Turn Latency in Server-VAD Conversational Systems:
+> A False-Positive–Latency Trade-off from Silence-Duration Tuning*
+> — submission in progress (journal to be confirmed)
 
 Submission in progress — see [`papers/paper1/`](papers/paper1/) for the
 manuscript once available, and its [`figures/`](papers/paper1/figures/) for
