@@ -24,7 +24,9 @@ This repository contains the open-source implementation accompanying the paper:
 > Learning: An Empirical Optimisation Framework*
 > — submitted to Computer Speech & Language (under review)
 
-A preprint is available in [`paper/`](papers/paper1/VAD_Optimisation_preprint.pdf).
+Submission in progress — see [`papers/paper1/`](papers/paper1/) for the
+manuscript once available, and its [`figures/`](papers/paper1/figures/) for
+the RSM/Pareto analysis output.
 
 The paper covers **Phase 1 only** (sweep, RSM, Pareto front, adaptive tuner).
 Phase 2 (LLM-as-a-Judge) and its accompanying publication are pending.
@@ -413,32 +415,11 @@ server-vad-optimisation/
 │   ├── sweep_vad_example.jsonl        # 20 synthetic CCD runs (pre-transcript format, ROC-1)
 │   ├── sweep_transcript_example.jsonl # 3 synthetic sessions with transcript (ROC-2)
 │   └── README.md
-├── paper/
-│   └── VAD_Optimisation_preprint.pdf
+├── papers/
+│   └── paper1/            # Manuscript and figures (in progress)
 ├── LICENSE
-├── CITATION.cff
 └── .gitignore
 ```
-
----
-
-## Citation
-
-If you use this code or methodology, please cite:
-
-```bibtex
-@article{kokholm2026vad,
-  title   = {Voice Activity Detection for Conversational AI in Clinical
-             Simulation-Based Learning: An Empirical Optimisation Framework},
-  author  = {Kokholm, Thomas Herbert},
-  journal = {Computer Speech & Language},
-  year    = {2026},
-  doi     = {10.2139/ssrn.6739487},
-  note    = {Under review}
-}
-```
-
-Or use the GitHub "Cite this repository" button which reads `CITATION.cff`.
 
 ---
 

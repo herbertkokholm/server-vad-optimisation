@@ -1,11 +1,12 @@
 # Paper
 
-Preprint of the accompanying manuscript, submitted to
-*Journal to be defined* (under review).
+Manuscript accompanying this repository's Phase 1 methodology:
 
-**`VAD_Optimisation_IEEE_preprint.pdf`**
-— Voice Activity Detection for Conversational AI in Clinical Simulation-Based Learning:
-An Empirical Optimisation Framework.
+> *Voice Activity Detection for Conversational AI in Clinical Simulation-Based
+> Learning: An Empirical Optimisation Framework*
 
-Cite via `CITATION.cff` in the repository root, or use the GitHub
-"Cite this repository" button.
+Submission in progress. The preprint and citation details will be added to
+this folder once available.
+
+See [`figures/`](figures/) for the RSM/Pareto analysis output referenced by
+the manuscript.
