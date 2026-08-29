@@ -1,7 +1,7 @@
 VAD SWEEP ANALYSIS SUMMARY
 ==================================================
 Runs included:  76
-Annotation filter: all
+Annotation filter: valid
 
 Primary outcome descriptives:
   FPR              mean=0.165  sd=0.096  min=0.000  max=0.444

@@ -43,7 +43,7 @@ CONFIG = {
     #   "all"       — include all runs regardless of annotation.valid
     #   "valid"     — include only runs where annotation.valid == True
     #   "annotated" — include only runs where annotation.valid is not None
-    "annotation_filter": "all",
+    "annotation_filter": "valid",
     # Minimum session duration in seconds — exclude runs shorter than this
     # (e.g. failed sessions, operator_did_not_pick_up)
     "min_duration_s": 60,
