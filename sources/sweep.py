@@ -30,7 +30,6 @@ import threading
 from datetime import datetime
 from itertools import product
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger("talkwise.sweep")
 
@@ -168,11 +167,11 @@ class SweepRunner:
         sweep_runner.end_run(snapshot)             # call after session ends
     """
 
-    def __init__(self, sweep_dir: Path = None):
+    def __init__(self, sweep_dir: Path | None = None):
         self._lock = threading.Lock()
-        self._active_run: Optional[dict] = None
-        self._session_id: Optional[str] = None
-        self._run_start: Optional[datetime] = None
+        self._active_run: dict | None = None
+        self._session_id: str | None = None
+        self._run_start: datetime | None = None
 
         self._sweep_dir = sweep_dir if sweep_dir is not None else SWEEP_DIR
         self._sweep_dir.mkdir(exist_ok=True)

@@ -26,14 +26,14 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")  # non-interactive backend for PNG output
-import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy import stats
-from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
+from sklearn.preprocessing import PolynomialFeatures
 
 # ── ANALYSIS CONFIG ────────────────────────────────────────────────────────────
 # Edit these values to control filtering and output behaviour.
@@ -151,7 +151,9 @@ def apply_filters(df: pd.DataFrame, cfg: dict) -> pd.DataFrame:
     df = df[~df["warmup"].fillna(False)]
 
     # Drop rows missing primary DVs
-    df = df.dropna(subset=["fpr", "tl_ms", "ptl_ms", "threshold", "silence_ms", "prefix_ms"])
+    df = df.dropna(
+        subset=["fpr", "tl_ms", "ptl_ms", "threshold", "silence_ms", "prefix_ms"]
+    )
 
     n_after = len(df)
     print(
@@ -176,8 +178,11 @@ def code_variables(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def fit_rsm(df: pd.DataFrame, outcome: str, covariates: list[str] = []) -> dict:
+def fit_rsm(
+    df: pd.DataFrame, outcome: str, covariates: list[str] | None = None
+) -> dict:
     """Fit second-order RSM model. Returns coefficients, R², p-values."""
+    covariates = covariates or []
     X_raw = df[["x1", "x2", "x3"]].values
     y = df[outcome].values
 
@@ -628,8 +633,13 @@ def write_pareto_model(df: pd.DataFrame, output_dir: Path):
     print(f"  Saved: {path.name}  ({len(points)} Pareto-optimal point(s))")
 
 
-def write_summary(df: pd.DataFrame, rsm_fpr: dict, rsm_tl: dict, output_dir: Path,
-                  rsm_ptl: dict = None):
+def write_summary(
+    df: pd.DataFrame,
+    rsm_fpr: dict,
+    rsm_tl: dict,
+    output_dir: Path,
+    rsm_ptl: dict | None = None,
+):
     """Write a plain-text summary table for quick inspection."""
     lines = [
         "VAD SWEEP ANALYSIS SUMMARY",
@@ -638,12 +648,18 @@ def write_summary(df: pd.DataFrame, rsm_fpr: dict, rsm_tl: dict, output_dir: Pat
         f"Annotation filter: {CONFIG['annotation_filter']}",
         "",
         "Primary outcome descriptives:",
-        f"  FPR              mean={df['fpr'].mean():.3f}  sd={df['fpr'].std():.3f}  "
-        f"min={df['fpr'].min():.3f}  max={df['fpr'].max():.3f}",
-        f"  TL (measured)    mean={df['tl_ms'].mean():.1f}ms  sd={df['tl_ms'].std():.1f}  "
-        f"min={df['tl_ms'].min():.1f}  max={df['tl_ms'].max():.1f}",
-        f"  Perceived latency mean={df['ptl_ms'].mean():.1f}ms  sd={df['ptl_ms'].std():.1f}  "
-        f"min={df['ptl_ms'].min():.1f}  max={df['ptl_ms'].max():.1f}",
+        (
+            f"  FPR              mean={df['fpr'].mean():.3f}  sd={df['fpr'].std():.3f}  "
+            f"min={df['fpr'].min():.3f}  max={df['fpr'].max():.3f}"
+        ),
+        (
+            f"  TL (measured)    mean={df['tl_ms'].mean():.1f}ms  sd={df['tl_ms'].std():.1f}  "
+            f"min={df['tl_ms'].min():.1f}  max={df['tl_ms'].max():.1f}"
+        ),
+        (
+            f"  Perceived latency mean={df['ptl_ms'].mean():.1f}ms  sd={df['ptl_ms'].std():.1f}  "
+            f"min={df['ptl_ms'].min():.1f}  max={df['ptl_ms'].max():.1f}"
+        ),
         "",
         "  NOTE: measured TL is taken from speech_stopped, which fires only after",
         "  server-VAD has already waited silence_duration_ms. Perceived latency adds",

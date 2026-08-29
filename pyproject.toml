@@ -1,0 +1,12 @@
+[tool.ruff]
+# docs/METRICS_CONTRACT.md documents the metrics schema via a fenced ```python
+# block with hand-aligned inline comments for readability; it isn't executable
+# code, so don't let ruff format reformat it.
+extend-exclude = ["docs/METRICS_CONTRACT.md"]
+
+[tool.ruff.lint.per-file-ignores]
+# sweep.py runs live during data collection. Its datetime.now() calls are
+# deliberately naive (recording_date grouping in analyse_sweep.py assumes
+# local wall-clock time) and its broad `except Exception` guards are
+# deliberate so one failed write/state-load doesn't crash an active session.
+"sources/sweep.py" = ["DTZ005", "BLE001"]

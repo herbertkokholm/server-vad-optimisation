@@ -492,9 +492,12 @@ def plot_roc_combined(curves: list, alpha: float, n_turns: int, out_dir: Path):
         fontsize=7,
         ha="right",
         va="bottom",
-        bbox=dict(
-            boxstyle="round,pad=0.3", facecolor="white", edgecolor="#cccccc", alpha=0.9
-        ),
+        bbox={
+            "boxstyle": "round,pad=0.3",
+            "facecolor": "white",
+            "edgecolor": "#cccccc",
+            "alpha": 0.9,
+        },
     )
 
     ax.set_title("Combined ROC — All Decision Boundaries")

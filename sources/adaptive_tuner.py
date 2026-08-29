@@ -33,7 +33,6 @@ import json
 import logging
 import time
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger("vad.adaptive_tuner")
 
@@ -119,7 +118,7 @@ class AdaptiveVADTuner:
 
     def __init__(
         self,
-        pareto_model: Optional[ParetoModel] = None,
+        pareto_model: ParetoModel | None = None,
         omega: float = 0.7,
         update_interval_s: float = 30.0,
         delta: float = DEFAULT_DELTA,
@@ -139,8 +138,8 @@ class AdaptiveVADTuner:
         self.update_interval_s = update_interval_s
         self.delta = delta
 
-        self._current_config: Optional[dict] = None
-        self._last_update_time: Optional[float] = None
+        self._current_config: dict | None = None
+        self._last_update_time: float | None = None
         self._n_updates: int = 0
 
         if pareto_model is not None:
