@@ -236,8 +236,6 @@ configurable in the `CONFIG` dict at the top of `analyse_sweep.py`.
 | `fig2_pareto_front.png` | Pareto front in FPR–TL objective space |
 | `fig3_rsm_coefficients.png` | RSM coefficients with significance markers (Bonferroni-corrected, p < 0.005) |
 | `fig4_marginal_effects.png` | Marginal effects of each parameter on FPR and TL |
-| `fig5_design_coverage.png` | CCD design point completion status |
-| `fig6_day_effect.png` | FPR and TL by recording date (day-effect covariate with mean ± SEM, if available) |
 | `summary.txt` | Descriptive statistics, R², significant terms, Pareto configurations |
 | `pareto_model.json` | Pareto-optimal configurations for use by `adaptive_tuner.py` |
 

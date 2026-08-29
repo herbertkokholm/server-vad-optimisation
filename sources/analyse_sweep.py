@@ -295,7 +295,13 @@ def fig1_response_surfaces(
 
     for ax, rsm, label, color, title in [
         (axes[0], rsm_fpr, "FPR", CONFIG["color_fpr"], "False Positive Rate"),
-        (axes[1], rsm_tl, "TL (ms)", CONFIG["color_tl"], "Turn Latency (ms)"),
+        (
+            axes[1],
+            rsm_tl,
+            "Perceived latency (ms)",
+            CONFIG["color_tl"],
+            "Perceived latency (ms)",
+        ),
     ]:
         X_poly_grid = rsm["poly"].transform(X_grid)
         Z = rsm["model"].predict(X_poly_grid).reshape(T.shape)
@@ -335,7 +341,7 @@ def fig1_response_surfaces(
         ax.set_ylabel("silence_duration_ms (coded)")
         ax.set_title(f"{title}\n(at median prefix_padding_ms)")
 
-    fig.suptitle("Response Surfaces: FPR and Turn Latency", y=1.02)
+    fig.suptitle("Response Surfaces: FPR and Perceived Latency", y=1.02)
     fig.tight_layout()
     path = output_dir / "fig1_response_surfaces.png"
     fig.savefig(path, dpi=CONFIG["dpi"], bbox_inches="tight")
@@ -407,7 +413,12 @@ def fig3_rsm_coefficients(rsm_fpr: dict, rsm_tl: dict, output_dir: Path):
 
     for ax, rsm, color, title in [
         (axes[0], rsm_fpr, CONFIG["color_fpr"], f"FPR  (R²={rsm_fpr['r2']:.3f})"),
-        (axes[1], rsm_tl, CONFIG["color_tl"], f"Turn Latency  (R²={rsm_tl['r2']:.3f})"),
+        (
+            axes[1],
+            rsm_tl,
+            CONFIG["color_tl"],
+            f"Perceived Latency  (R²={rsm_tl['r2']:.3f})",
+        ),
     ]:
         names = list(rsm["coef"].keys())
         coefs = list(rsm["coef"].values())
@@ -458,7 +469,7 @@ def fig4_marginal_effects(df: pd.DataFrame, output_dir: Path):
         for row, (outcome, color, ylabel) in enumerate(
             [
                 ("fpr", CONFIG["color_fpr"], "FPR"),
-                ("tl_ms", CONFIG["color_tl"], "Turn Latency (ms)"),
+                ("ptl_ms", CONFIG["color_tl"], "Perceived latency (ms)"),
             ]
         ):
             ax = axes[row][col]
@@ -556,7 +567,7 @@ def fig6_day_effect(df: pd.DataFrame, output_dir: Path):
 
     for ax, outcome, color, label in [
         (axes[0], "fpr", CONFIG["color_fpr"], "FPR"),
-        (axes[1], "tl_ms", CONFIG["color_tl"], "Turn Latency (ms)"),
+        (axes[1], "ptl_ms", CONFIG["color_tl"], "Perceived latency (ms)"),
     ]:
         days = sorted(df["recording_date"].dropna().unique())
         means = [df[df["recording_date"] == d][outcome].mean() for d in days]
@@ -775,14 +786,11 @@ def main():
     # Plots
     print(f"\nGenerating figures -> {output_dir}/")
     set_style()
-    fig1_response_surfaces(df, rsm_fpr, rsm_tl, output_dir)
+    fig1_response_surfaces(df, rsm_fpr, rsm_ptl, output_dir)
     fig2_pareto_front(df, output_dir)
     write_pareto_model(df, output_dir)
-    fig3_rsm_coefficients(rsm_fpr, rsm_tl, output_dir)
+    fig3_rsm_coefficients(rsm_fpr, rsm_ptl, output_dir)
     fig4_marginal_effects(df, output_dir)
-    fig5_design_coverage(df, output_dir)
-    if "recording_date" in df.columns and df["recording_date"].notna().any():
-        fig6_day_effect(df, output_dir)
     write_summary(df, rsm_fpr, rsm_tl, output_dir, rsm_ptl=rsm_ptl)
 
     print(
