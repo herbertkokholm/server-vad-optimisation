@@ -101,7 +101,7 @@ A first skecth for a study is listed here: [`paper/`](papers/paper2/paper2_sketc
 
 ## Reference Hardware Platform
 
-The study data was collected using [herbertkokholm/talkwise-pi](https://github.com/herbertkokholm/talkwise-pi)
+The study data was collected using a separate internal repository (Talkwise Pi)
 — an embedded audio terminal running on Raspberry Pi, built for OSCE clinical
 simulation. The production sweep runner (`sweep.py`) and metrics collector
 (`metrics.py`) in that repository are the implementations from which this
@@ -112,7 +112,7 @@ standalone version is derived.
 ## Quick Start
 
 ```bash
-git clone https://github.com/herbertkokholm/server-vad-optimisation
+git clone <this-repository-url>
 cd server-vad-optimisation
 pip3 install -r requirements.txt
 
@@ -377,7 +377,7 @@ Empirical validation is pending and planned using a leave-one-domain-out protoco
 
 `sweep.py` integrates with a metrics collector that captures live VAD events
 from the OpenAI Realtime API WebSocket stream. In the Talkwise production system this is
-`metrics.py` in [herbertkokholm/talkwise-pi](https://github.com/herbertkokholm/talkwise-pi) —
+`metrics.py` in a separate internal repository (Talkwise Pi) —
 the embedded audio terminal platform that collected the study data.
 
 The required interface is documented in [`docs/METRICS_CONTRACT.md`](docs/METRICS_CONTRACT.md).

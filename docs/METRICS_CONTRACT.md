@@ -2,7 +2,7 @@
 
 `sweep.py` integrates with a metrics collector that captures live VAD events
 from the OpenAI Realtime API WebSocket stream. In the Talkwise production system 
-this is metrics.py in http://herbertkokholm/talkwise-pi; for independent implementations, 
+this is metrics.py in a separate internal repository; for independent implementations, 
 any object satisfying the interface below is sufficient.
 
 ---

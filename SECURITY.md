@@ -30,6 +30,6 @@ example_data/ is anonymised and contains no personally identifiable information.
 
 ## Reporting a Vulnerability
 
-Please contact: thomas@herbertkokholm.dk  
+Please open a private [GitHub Security Advisory](../../security/advisories/new) for this repository.  
 
 Do not create a public GitHub issue for security-related findings.
