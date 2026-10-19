@@ -32,7 +32,7 @@ import json
 import os
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import anthropic
@@ -323,7 +323,7 @@ def judge_session(client: anthropic.Anthropic, record: dict) -> dict:
 
     return {
         "model": CONFIG["model"],
-        "judged_at": datetime.now(timezone.utc).isoformat(),
+        "judged_at": datetime.now(UTC).isoformat(),
         "turns": turns_out,
         "session_adherence_score": round(session_adherence, 4),
         "session_flow_score": round(session_flow, 4),
