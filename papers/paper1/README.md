@@ -18,8 +18,9 @@ python3 papers/paper1/make_figures.py
 ```
 
 This runs [`sources/analyse_sweep.py`](../../sources/analyse_sweep.py) on the
-76 study sessions in [`results/`](../../results/) and writes the outputs to
-[`figures/`](figures/). It then checks every value the manuscript reports
+76 study sessions in [`results/`](../../results/), then the Appendix A
+robustness analyses in [`robustness.py`](robustness.py), and writes the
+outputs to [`figures/`](figures/). It then checks every value the manuscript reports
 against the regenerated analysis and exits with an error if any of them cannot
 be reproduced at its reported precision. The bootstrap uses a fixed seed, so a
 re-run reproduces the committed files byte for byte.
@@ -32,6 +33,7 @@ re-run reproduces the committed files byte for byte.
 | `Fig4.eps/.tif/.png` | Marginal effects |
 | `summary.txt` | Descriptives, coefficient tables with and without the day covariate, secondary outcomes, bootstrap non-dominance frequencies |
 | `pareto_model.json` | Non-dominated configuration means, as loaded by `adaptive_tuner.py` |
+| `robustness.txt` | Robustness checks for Appendix A: mixed model, design-point means, lack of fit, binomial FPR model |
 
 ## Figure captions
 
