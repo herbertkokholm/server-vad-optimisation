@@ -20,13 +20,13 @@ This repository has grown across two research phases:
 
 This repository contains the open-source implementation accompanying the paper:
 
-> *Perceived Turn Latency in Server-VAD Conversational Systems:
-> A False-Positive–Latency Trade-off from Silence-Duration Tuning*
-> — submission in progress (journal to be confirmed)
+> *Endpointing Latency versus Interruptive False Positives in Server-Side VAD:
+> A Response-Surface Characterisation of a Production Speech-to-Speech API*
+> — under review, International Journal of Speech Technology
 
-Submission in progress — see [`papers/paper1/`](papers/paper1/) for the
-manuscript once available, and its [`figures/`](papers/paper1/figures/) for
-the RSM/Pareto analysis output.
+See [`papers/paper1/`](papers/paper1/) for how to regenerate the manuscript
+figures, and [`papers/paper1/figures/`](papers/paper1/figures/) for the
+RSM/Pareto analysis output.
 
 The paper covers **Phase 1 only** (sweep, RSM, Pareto front, adaptive tuner).
 Phase 2 (LLM-as-a-Judge) and its accompanying publication are pending.
@@ -57,8 +57,9 @@ This repository provides:
    VAD parameters into each session, and writes JSONL output per run.
 
 2. **`analyse_sweep.py`** — a post-hoc analysis script that loads JSONL files,
-   fits second-order RSM models, computes the Pareto front in FPR–TL objective
-   space, produces publication-quality PNG figures, and writes `pareto_model.json`.
+   fits second-order RSM models, computes the Pareto front of design-point means
+   in FPR–TL objective space with bootstrap uncertainty, produces journal-ready
+   figures (EPS, TIFF, PNG), and writes `pareto_model.json`.
 
 3. **`adaptive_tuner.py`** — a session-level adaptive tuning algorithm that
    observes live VAD metrics and emits `session.update` events toward the
@@ -114,13 +115,14 @@ standalone version is derived.
 ```bash
 git clone <this-repository-url>
 cd server-vad-optimisation
-pip3 install -r requirements.txt
+pip3 install -r sources/requirements.txt
 
 # Run analysis on the included example data
-python3 analyse_sweep.py --input example_data/ --output figures/
+python3 sources/analyse_sweep.py --input example_data/ --output figures/
 ```
 
-This produces six figures, a `summary.txt`, and a `pareto_model.json` in `figures/`.
+This produces four figures (each as `.eps`, `.tif` and `.png`), a `summary.txt`,
+and a `pareto_model.json` in `figures/`.
 
 ---
 
@@ -227,23 +229,39 @@ python3 sources/analyse_sweep.py --input sweep_runs/ --output figures/ --filter 
 | `annotated` | Include only runs where `annotation.valid` is not `None` |
 | `valid` | Include only runs where `annotation.valid == True` |
 
-Additional thresholds (minimum session duration, FPR outlier cap) are
-configurable in the `CONFIG` dict at the top of `analyse_sweep.py`.
+Additional thresholds (minimum session duration, FPR outlier cap), the
+bootstrap settings and the random seed are configurable in the `CONFIG` dict
+at the top of `analyse_sweep.py`.
 
-#### Output figures
+#### Outcomes and model
+
+- **FPR** — interruptive false-positive rate (`snapshot.openai.fpr`).
+- **TL** — endpointing latency: `silence_duration_ms` + the logged interval
+  from `speech_stopped` to the first response audio chunk. `speech_stopped`
+  fires only after server VAD has waited `silence_duration_ms`, so the
+  API-reported latency alone excludes the parameter being optimised.
+
+Each outcome is fitted by OLS (statsmodels) with a second-order polynomial in
+the three z-scored VAD parameters plus a binary recording-day covariate.
+Terms are tested at a Bonferroni-corrected α = 0.05 / 10. `summary.txt`
+reports every model with and without the day covariate, including the model
+for latency measured from `speech_stopped`.
+
+#### Output files
 
 | File | Content |
 |------|---------|
-| `fig1_response_surfaces.png` | RSM contour plots for FPR and TL across threshold × silence_duration_ms (prefix_padding fixed at centre point) |
-| `fig2_pareto_front.png` | Pareto front in FPR–TL objective space |
-| `fig3_rsm_coefficients.png` | RSM coefficients with significance markers (Bonferroni-corrected, p < 0.005) |
-| `fig4_marginal_effects.png` | Marginal effects of each parameter on FPR and TL |
-| `summary.txt` | Descriptive statistics, R², significant terms, Pareto configurations |
-| `pareto_model.json` | Pareto-optimal configurations for use by `adaptive_tuner.py` |
+| `Fig1` | Model-predicted FPR and TL over threshold × silence duration, prefix padding fixed at its centre level |
+| `Fig2` | FPR vs TL: all sessions, design-point means with 95 % bootstrap CIs, non-dominated means and session-level non-dominated runs |
+| `Fig3` | Standardised RSM coefficients with 95 % CIs; filled bars = significant at the Bonferroni level |
+| `Fig4` | Marginal effects: sessions and level means with 95 % bootstrap CIs per factor and outcome |
+| `summary.txt` | Descriptives, full coefficient tables, secondary outcomes, bootstrap non-dominance frequencies |
+| `pareto_model.json` | Non-dominated configuration means for use by `adaptive_tuner.py` |
 
-All figures are 300 DPI, Times New Roman, suitable for direct LaTeX inclusion.
-
-Response surfaces are visualised as 2D slices with prefix_padding_ms fixed at its centre-point value.
+Each figure is written as `.eps` (vector, fonts embedded), `.tif` (600 dpi,
+RGB, LZW) and `.png` (600 dpi) at 174 mm width in Arial 8 pt, following
+Springer Nature artwork guidelines. The bootstrap uses a fixed seed, so
+re-running on the same data reproduces the outputs byte for byte.
 
 ### LLM-as-a-Judge — `judge.py`
 
@@ -361,12 +379,15 @@ await tuner.update_if_needed(ws, metrics_collector)
 ```
 
 The `omega` parameter controls the FPR/TL trade-off: `1.0` minimises FPR
-exclusively, `0.0` minimises turn latency exclusively.
+exclusively, `0.0` minimises endpointing latency (TL) exclusively.
 
 **Status:** The algorithm is fully designed and implemented — interface, scoring
 function, normalised parameter distance, and `session.update` emission are
 complete. `pareto_model.json` is committed to the repository and contains the
-empirical Pareto front from the Stage 1 CCD sweep ($N = 76$).
+non-dominated configuration means (sessions pooled per VAD configuration) from
+the Stage 1 CCD sweep ($N = 76$), scored on FPR and endpointing latency.
+The tuner selects among these stored points; it does not refit a surrogate
+model at run time.
 `tuner.is_ready` returns `True` when the model is loaded with scored points.
 Empirical validation is pending and planned using a leave-one-domain-out protocol
 (OSCE → dementia care dialogue) with multiple naive speakers.
@@ -415,8 +436,11 @@ server-vad-optimisation/
 │   ├── sweep_vad_example.jsonl        # 20 synthetic CCD runs (pre-transcript format, ROC-1)
 │   ├── sweep_transcript_example.jsonl # 3 synthetic sessions with transcript (ROC-2)
 │   └── README.md
+├── results/                  # Study data: 76 sweep sessions (JSONL)
 ├── papers/
-│   └── paper1/            # Manuscript and figures (in progress)
+│   └── paper1/
+│       ├── make_figures.py   # Regenerates figures and checks manuscript values
+│       └── figures/          # Fig1–Fig4 (.eps/.tif/.png), summary.txt, pareto_model.json
 ├── LICENSE
 └── .gitignore
 ```
