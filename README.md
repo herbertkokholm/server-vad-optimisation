@@ -1,5 +1,7 @@
 # server-vad-optimisation
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22171037.svg)](https://doi.org/10.5281/zenodo.22171037)
+
 **An empirical framework for optimising Voice Activity Detection parameters in
 LLM-driven conversational systems, extended with an LLM-as-a-Judge phase for
 intent-detection analysis.**
@@ -27,6 +29,10 @@ This repository contains the open-source implementation accompanying the paper:
 See [`papers/paper1/`](papers/paper1/) for how to regenerate the manuscript
 figures, and [`papers/paper1/figures/`](papers/paper1/figures/) for the
 RSM/Pareto analysis output.
+
+Each release is archived on Zenodo; the concept DOI
+[10.5281/zenodo.22171037](https://doi.org/10.5281/zenodo.22171037) always
+resolves to the latest version.
 
 The paper covers **Phase 1 only** (sweep, RSM, Pareto front, adaptive tuner).
 Phase 2 (LLM-as-a-Judge) and its accompanying publication are pending.
@@ -96,7 +102,7 @@ These turn-level parameters feed into ROC-2 in `roc_analysis.py`, where
 `persona_adherence_score` is swept as the discriminator threshold and `should_adhere`
 provides the binary ground truth.
 
-A first skecth for a study is listed here: [`paper/`](papers/paper2/paper2_sketch.md).
+A first sketch for a study is in [`papers/paper2/paper2_sketch.md`](papers/paper2/paper2_sketch.md).
 
 ---
 
