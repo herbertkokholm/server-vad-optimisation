@@ -9,7 +9,7 @@
       "fpr": 0.0665,
       "endpointing_latency_ms": 2029.0,
       "response_latency_ms": 829.0,
-      "p_non_dominated": 0.662,
+      "p_non_dominated": 0.664,
       "n_sessions": 4
     },
     {
@@ -19,7 +19,7 @@
       "fpr": 0.1056,
       "endpointing_latency_ms": 1919.9,
       "response_latency_ms": 719.9,
-      "p_non_dominated": 0.311,
+      "p_non_dominated": 0.326,
       "n_sessions": 4
     },
     {
@@ -29,7 +29,7 @@
       "fpr": 0.1192,
       "endpointing_latency_ms": 1431.8,
       "response_latency_ms": 656.9,
-      "p_non_dominated": 0.94,
+      "p_non_dominated": 0.945,
       "n_sessions": 4
     },
     {
@@ -39,7 +39,7 @@
       "fpr": 0.2074,
       "endpointing_latency_ms": 1049.2,
       "response_latency_ms": 699.2,
-      "p_non_dominated": 0.793,
+      "p_non_dominated": 0.799,
       "n_sessions": 4
     }
   ]

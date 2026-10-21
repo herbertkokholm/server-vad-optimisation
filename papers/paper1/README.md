@@ -27,7 +27,7 @@ re-run reproduces the committed files byte for byte.
 | File | Content |
 |------|---------|
 | `Fig1.eps/.tif/.png` | Response surfaces for FPR and TL |
-| `Fig2.eps/.tif/.png` | FPR versus TL: sessions, design-point means and non-dominated sets |
+| `Fig2.eps/.tif/.png` | FPR versus TL: sessions, configuration means and non-dominated sets |
 | `Fig3.eps/.tif/.png` | Standardised RSM coefficients |
 | `Fig4.eps/.tif/.png` | Marginal effects |
 | `summary.txt` | Descriptives, coefficient tables with and without the day covariate, secondary outcomes, bootstrap non-dominance frequencies |
@@ -41,9 +41,10 @@ threshold and silence duration, with prefix padding fixed at 300 ms; open
 circles mark design-point locations projected onto this plane
 
 **Fig. 2** Interruptive false-positive rate versus endpointing latency for all
-sessions and design-point means with 95% bootstrap confidence intervals, with
-the non-dominated design-point means joined by a step line and the
-non-dominated single sessions circled
+sessions and the 15 configuration means (replicated centre point pooled,
+n = 20) with 95% bootstrap confidence intervals, with the non-dominated
+configuration means ringed and joined by a step line and the non-dominated
+single sessions circled
 
 **Fig. 3** Standardised coefficients with 95% confidence intervals of the
 second-order response surface models for (a) interruptive false-positive rate

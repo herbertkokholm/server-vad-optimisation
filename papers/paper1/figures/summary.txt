@@ -101,39 +101,25 @@ Latency from speech_stopped model: R² = 0.1446 with day, 0.0787 without day   (
 
 Secondary outcomes:
   IR (cancellations/min)  mean=1.125  sd=0.787  r(silence)=-0.444  p=5.9e-05
-  TDP                     mean=0.835  sd=0.096  r(silence)=0.396  p=0.0004
   WebSocket RTT (ms)      mean=207.0  sd=14.3  min=180.7  max=276.1
 
-Design-point means and bootstrap non-dominance frequency (2000 resamples):
-              threshold  silence_ms  prefix_ms  n    fpr   tl_ms  non_dominated  p_non_dominated
-design_point                                                                                    
-14                0.625         775        300  4  0.053  1526.8           True            0.894
-9                 0.850         775        300  4  0.119  1431.8           True            0.850
-5                 0.850         350        450  4  0.207  1049.2           True            0.776
-17                0.625         775        300  4  0.098  1485.0           True            0.582
-4                 0.850         350        150  4  0.208  1081.0          False            0.538
-6                 0.850        1200        150  4  0.067  2029.0          False            0.369
-10                0.625         350        300  4  0.209  1250.3          False            0.349
-16                0.625         775        300  4  0.122  1495.0          False            0.267
-18                0.625         775        300  4  0.148  1506.0          False            0.131
-3                 0.400        1200        450  4  0.106  1919.9          False            0.088
-12                0.625         775        150  4  0.144  1602.9          False            0.072
-1                 0.400         350        450  4  0.264  1250.3          False            0.072
-0                 0.400         350        150  4  0.323  1098.6          False            0.055
-15                0.625         775        300  4  0.207  1574.2          False            0.018
-8                 0.400         775        300  4  0.197  1735.4          False            0.009
-13                0.625         775        450  4  0.147  1553.4          False            0.006
-7                 0.850        1200        450  4  0.140  1936.0          False            0.006
-11                0.625        1200        300  4  0.172  1968.5          False            0.000
-2                 0.400        1200        150  4  0.204  1993.3          False            0.000
-
-Non-dominated configuration means (sessions pooled per configuration;
-written to pareto_model.json):
- threshold  silence_ms  prefix_ms  n   fpr  tl_ms  p_non_dominated
-      0.85        1200        150  4 0.067 2029.0            0.662
-      0.40        1200        450  4 0.106 1919.9            0.311
-      0.85         775        300  4 0.119 1431.8            0.940
-      0.85         350        450  4 0.207 1049.2            0.794
+Configuration means (sessions pooled per configuration) and bootstrap non-dominance frequency (2000 resamples); the non-dominated rows are written to pareto_model.json:
+ threshold  silence_ms  prefix_ms  n   fpr  tl_ms  non_dominated  p_non_dominated
+     0.850         775        300  4 0.119 1431.8           True            0.944
+     0.850         350        450  4 0.207 1049.2           True            0.799
+     0.850        1200        150  4 0.067 2029.0           True            0.664
+     0.850         350        150  4 0.208 1081.0          False            0.523
+     0.625         775        300 20 0.126 1517.4          False            0.382
+     0.625         350        300  4 0.209 1250.3          False            0.357
+     0.400        1200        450  4 0.106 1919.9           True            0.326
+     0.625         775        150  4 0.144 1602.9          False            0.232
+     0.625         775        450  4 0.147 1553.4          False            0.069
+     0.400         350        450  4 0.264 1250.3          False            0.065
+     0.850        1200        450  4 0.140 1936.0          False            0.061
+     0.400         350        150  4 0.323 1098.6          False            0.058
+     0.400         775        300  4 0.197 1735.4          False            0.010
+     0.400        1200        150  4 0.204 1993.3          False            0.004
+     0.625        1200        300  4 0.172 1968.5          False            0.000
 
 Session-level non-dominated runs (single replications):
  design_point  rep  threshold  silence_ms  prefix_ms    fpr  tl_ms

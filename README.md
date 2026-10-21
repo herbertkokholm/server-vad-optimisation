@@ -57,7 +57,7 @@ This repository provides:
    VAD parameters into each session, and writes JSONL output per run.
 
 2. **`analyse_sweep.py`** — a post-hoc analysis script that loads JSONL files,
-   fits second-order RSM models, computes the Pareto front of design-point means
+   fits second-order RSM models, computes the Pareto front of configuration means
    in FPR–TL objective space with bootstrap uncertainty, produces journal-ready
    figures (EPS, TIFF, PNG), and writes `pareto_model.json`.
 
@@ -252,7 +252,7 @@ for latency measured from `speech_stopped`.
 | File | Content |
 |------|---------|
 | `Fig1` | Model-predicted FPR and TL over threshold × silence duration, prefix padding fixed at its centre level |
-| `Fig2` | FPR vs TL: all sessions, design-point means with 95 % bootstrap CIs, non-dominated means and session-level non-dominated runs |
+| `Fig2` | FPR vs TL: all sessions, configuration means (replicated centre pooled, n = 20) with 95 % bootstrap CIs, non-dominated means and session-level non-dominated runs |
 | `Fig3` | Standardised RSM coefficients with 95 % CIs; filled bars = significant at the Bonferroni level |
 | `Fig4` | Marginal effects: sessions and level means with 95 % bootstrap CIs per factor and outcome |
 | `summary.txt` | Descriptives, full coefficient tables, secondary outcomes, bootstrap non-dominance frequencies |

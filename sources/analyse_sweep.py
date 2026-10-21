@@ -2,7 +2,7 @@
 VAD Sweep Analysis
 ==================
 Reads sweep JSONL files, fits second-order RSM models, computes the Pareto
-front of design-point means with bootstrap uncertainty, and produces
+front of configuration means with bootstrap uncertainty, and produces
 journal-ready figures (EPS, 600 dpi TIFF and PNG) plus pareto_model.json.
 
 Usage:
@@ -240,17 +240,17 @@ def pareto_front(fpr: np.ndarray, tl: np.ndarray) -> np.ndarray:
     return ~(le & lt).any(axis=1)
 
 
-def design_point_table(
-    df: pd.DataFrame, rng: np.random.Generator, n_boot: int, by: str = "design_point"
+def config_table(
+    df: pd.DataFrame, rng: np.random.Generator, n_boot: int
 ) -> pd.DataFrame:
-    """Group means with bootstrap CIs and non-dominance frequencies.
+    """Configuration means with bootstrap CIs and non-dominance frequencies.
 
-    by="design_point": replicated centre points keep their own design-point
-    index, so the table has one row per design point (19 for the face-centred
-    CCD). by="config": sessions are pooled per unique VAD configuration.
+    Sessions are pooled per unique VAD configuration, so the five replicated
+    centre-point blocks of the CCD form a single configuration (n = 20) and
+    the face-centred design yields 15 configurations.
     """
-    groups = dict(list(df.groupby(by)))
-    dp = df.groupby(by).agg(
+    groups = dict(list(df.groupby(FACTORS)))
+    dp = df.groupby(FACTORS, as_index=False).agg(
         threshold=("threshold", "first"),
         silence_ms=("silence_ms", "first"),
         prefix_ms=("prefix_ms", "first"),
@@ -259,17 +259,16 @@ def design_point_table(
         tl_ms=("tl_ms", "mean"),
         response_latency_ms=("response_latency_ms", "mean"),
     )
-    for i, g in groups.items():
+    for i, key in enumerate(groups):
+        g = groups[key]
         dp.loc[i, ["fpr_lo", "fpr_hi"]] = boot_ci(g["fpr"].to_numpy(), rng, n_boot)
         dp.loc[i, ["tl_lo", "tl_hi"]] = boot_ci(g["tl_ms"].to_numpy(), rng, n_boot)
     dp["non_dominated"] = pareto_front(dp["fpr"].to_numpy(), dp["tl_ms"].to_numpy())
 
-    # How often is each design point non-dominated when its replications are
+    # How often is each configuration non-dominated when its sessions are
     # resampled with replacement?
     counts = np.zeros(len(dp))
-    samples = [
-        (groups[i]["fpr"].to_numpy(), groups[i]["tl_ms"].to_numpy()) for i in dp.index
-    ]
+    samples = [(g["fpr"].to_numpy(), g["tl_ms"].to_numpy()) for g in groups.values()]
     for _ in range(n_boot):
         fpr_b, tl_b = [], []
         for fpr, tl in samples:
@@ -403,7 +402,7 @@ def fig1_response_surfaces(df, scaling, models, output_dir: Path):
 
 
 def fig2_pareto(df, dp, session_front, output_dir: Path):
-    """Figure 2: FPR vs TL — sessions, design-point means with 95% bootstrap
+    """Figure 2: FPR vs TL — sessions, configuration means with 95% bootstrap
     CIs, the non-dominated set of means, and the session-level front."""
     fig, ax = figure(105)
     colour = dict(zip(levels(df, "silence_ms"), SILENCE_COLOURS))
@@ -424,6 +423,18 @@ def fig2_pareto(df, dp, session_front, output_dir: Path):
             capthick=0.6,
             zorder=2,
         )
+        if r["non_dominated"]:
+            # Outer ring with a white gap, visible on every fill colour
+            ax.scatter(
+                r["fpr"],
+                r["tl_ms"],
+                marker=marker[r["threshold"]],
+                s=110,
+                facecolor="white",
+                edgecolor="black",
+                linewidths=1.0,
+                zorder=4,
+            )
         ax.scatter(
             r["fpr"],
             r["tl_ms"],
@@ -431,8 +442,8 @@ def fig2_pareto(df, dp, session_front, output_dir: Path):
             s=34,
             facecolor=c,
             edgecolor="black",
-            linewidths=1.4 if r["non_dominated"] else 0.5,
-            zorder=4,
+            linewidths=0.5,
+            zorder=5,
         )
 
     front = dp[dp["non_dominated"]].sort_values("fpr")
@@ -475,10 +486,10 @@ def fig2_pareto(df, dp, session_front, output_dir: Path):
             lw=0.9,
             color="black",
             marker="o",
-            ms=5.5,
+            ms=8.5,
             mfc="white",
             mec="black",
-            mew=1.4,
+            mew=1.0,
         ),
         Line2D([], [], ls="", marker="o", ms=8, mfc="none", mec=OI_VERMILION, mew=1.0),
     ]
@@ -679,7 +690,7 @@ def coefficient_lines(m) -> list[str]:
 
 
 def write_summary(
-    df, scaling, models, models_noday, dp, configs, session_front, output_dir
+    df, scaling, models, models_noday, configs, session_front, output_dir
 ):
     lines = [
         "VAD SWEEP ANALYSIS SUMMARY",
@@ -734,9 +745,7 @@ def write_summary(
 
     # Secondary outcomes (descriptive analysis)
     ir = df["interruptions"] / (df["duration_s"] / 60)  # cancellations per minute
-    tdp = 1 - df["fpr"]  # triggers that were not interruptive false positives
     r_ir = stats.pearsonr(df["silence_ms"], ir)
-    r_tdp = stats.pearsonr(df["silence_ms"], tdp)
     ws = df["ws_latency_ms"]
     lines += [
         "",
@@ -744,10 +753,6 @@ def write_summary(
         (
             f"  IR (cancellations/min)  mean={ir.mean():.3f}  sd={ir.std():.3f}  "
             f"r(silence)={r_ir.statistic:.3f}  p={r_ir.pvalue:.2g}"
-        ),
-        (
-            f"  TDP                     mean={tdp.mean():.3f}  sd={tdp.std():.3f}  "
-            f"r(silence)={r_tdp.statistic:.3f}  p={r_tdp.pvalue:.2g}"
         ),
         (
             f"  WebSocket RTT (ms)      mean={ws.mean():.1f}  sd={ws.std():.1f}  "
@@ -758,31 +763,12 @@ def write_summary(
     lines += [
         "",
         (
-            f"Design-point means and bootstrap non-dominance frequency "
-            f"({CONFIG['n_boot']} resamples):"
+            "Configuration means (sessions pooled per configuration) and bootstrap "
+            f"non-dominance frequency ({CONFIG['n_boot']} resamples); the "
+            "non-dominated rows are written to pareto_model.json:"
         ),
-        dp[
-            [
-                "threshold",
-                "silence_ms",
-                "prefix_ms",
-                "n",
-                "fpr",
-                "tl_ms",
-                "non_dominated",
-                "p_non_dominated",
-            ]
-        ]
+        configs[[*FACTORS, "n", "fpr", "tl_ms", "non_dominated", "p_non_dominated"]]
         .sort_values("p_non_dominated", ascending=False)
-        .round({"fpr": 3, "tl_ms": 1, "p_non_dominated": 3})
-        .to_string(),
-        "",
-        "Non-dominated configuration means (sessions pooled per configuration;",
-        "written to pareto_model.json):",
-        configs[configs["non_dominated"]][
-            [*FACTORS, "n", "fpr", "tl_ms", "p_non_dominated"]
-        ]
-        .sort_values("fpr")
         .round({"fpr": 3, "tl_ms": 1, "p_non_dominated": 3})
         .to_string(index=False),
         "",
@@ -803,7 +789,6 @@ def write_summary(
 def run(input_dir: Path, output_dir: Path) -> dict:
     """Run the full analysis and write all outputs. Returns intermediate results."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    rng = np.random.default_rng(CONFIG["seed"])
 
     jsonl_files = sorted(input_dir.glob("sweep_*.jsonl"))
     if not jsonl_files:
@@ -826,28 +811,26 @@ def run(input_dir: Path, output_dir: Path) -> dict:
     print(f"  FPR R² = {models['fpr'].rsquared:.4f}")
     print(f"  TL  R² = {models['tl_ms'].rsquared:.4f}")
 
-    dp = design_point_table(df, rng, CONFIG["n_boot"])
+    # Each random step gets its own stream so results do not depend on the
+    # order in which outputs are produced.
+    seed = CONFIG["seed"]
+    configs = config_table(df, np.random.default_rng([seed, 1]), CONFIG["n_boot"])
     session_front = df[pareto_front(df["fpr"].to_numpy(), df["tl_ms"].to_numpy())]
 
     print(f"\nWriting outputs -> {output_dir}/")
     set_style()
     fig1_response_surfaces(df, scaling, models, output_dir)
-    fig2_pareto(df, dp, session_front, output_dir)
+    fig2_pareto(df, configs, session_front, output_dir)
     fig3_rsm_coefficients(models, output_dir)
-    fig4_marginal_effects(df, rng, output_dir)
-    df["config"] = df.groupby(FACTORS).ngroup()
-    configs = design_point_table(df, rng, CONFIG["n_boot"], by="config")
+    fig4_marginal_effects(df, np.random.default_rng([seed, 2]), output_dir)
     write_pareto_model(configs, output_dir)
-    write_summary(
-        df, scaling, models, models_noday, dp, configs, session_front, output_dir
-    )
+    write_summary(df, scaling, models, models_noday, configs, session_front, output_dir)
 
     return {
         "df": df,
         "scaling": scaling,
         "models": models,
         "models_noday": models_noday,
-        "design_points": dp,
         "configs": configs,
         "session_front": session_front,
     }

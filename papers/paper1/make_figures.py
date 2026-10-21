@@ -38,8 +38,8 @@ REFERENCE = [
     ("TL mean (ms)", lambda r: r["df"]["tl_ms"].mean(), 1552, 0.5),
     ("TL SD (ms)", lambda r: r["df"]["tl_ms"].std(), 353, 0.5),
     ("WebSocket RTT mean", lambda r: r["df"]["ws_latency_ms"].mean(), 207.0, 0.05),
+    ("WebSocket RTT SD", lambda r: r["df"]["ws_latency_ms"].std(), 14.3, 0.05),
     ("WebSocket RTT max", lambda r: r["df"]["ws_latency_ms"].max(), 276.1, 0.05),
-    ("TDP mean", lambda r: 1 - r["df"]["fpr"].mean(), 0.835, 0.0005),
     ("FPR R²", lambda r: r["models"]["fpr"].rsquared, 0.353, 0.0005),
     ("FPR b1", lambda r: r["models"]["fpr"].params["x1"], -0.026, 0.0005),
     ("FPR p1", lambda r: r["models"]["fpr"].pvalues["x1"], 0.009, 0.0005),
@@ -65,6 +65,24 @@ REFERENCE = [
         lambda r: r["models_noday"]["tl_ms"].params["x2"],
         300.7,
         0.05,
+    ),
+    (
+        "speech_stopped R²",
+        lambda r: r["models"]["response_latency_ms"].rsquared,
+        0.145,
+        0.0005,
+    ),
+    (
+        "speech_stopped b2",
+        lambda r: r["models"]["response_latency_ms"].params["x2"],
+        -8.0,
+        0.05,
+    ),
+    (
+        "speech_stopped p2",
+        lambda r: r["models"]["response_latency_ms"].pvalues["x2"],
+        0.71,
+        0.005,
     ),
     (
         "speech_stopped R² without day",
@@ -93,12 +111,6 @@ REFERENCE = [
         -0.44,
         0.005,
     ),
-    (
-        "r(silence, TDP)",
-        lambda r: np.corrcoef(r["df"]["silence_ms"], 1 - r["df"]["fpr"])[0, 1],
-        0.40,
-        0.005,
-    ),
 ]
 P_BELOW = [
     ("FPR p2", lambda r: r["models"]["fpr"].pvalues["x2"], 0.001),
@@ -110,6 +122,14 @@ DESIGN_POINT_FPR = {
     (0.85, 1200, 150): (0.067, 0.099),
 }
 SESSION_FRONT = [(0.625, 350, 300, 0.056, 960), (0.625, 775, 300, 0.000, 1446)]
+# Non-dominated configuration means (sessions pooled per configuration) ->
+# bootstrap non-dominance frequency
+CONFIG_FRONT = {
+    (0.85, 1200, 150): 0.66,
+    (0.40, 1200, 450): 0.33,
+    (0.85, 775, 300): 0.94,
+    (0.85, 350, 450): 0.80,
+}
 
 
 def check(results: dict) -> list[str]:
@@ -156,6 +176,24 @@ def check(results: dict) -> list[str]:
     print(f"  {'OK ' if ok else 'DEV'} session-level front          {front}")
     if not ok:
         failed.append("session-level front")
+
+    configs = results["configs"]
+    front = configs[configs["non_dominated"]]
+    found = {(r.threshold, r.silence_ms, r.prefix_ms) for r in front.itertuples()}
+    ok = found == set(CONFIG_FRONT)
+    print(f"  {'OK ' if ok else 'DEV'} configuration front          {sorted(found)}")
+    if not ok:
+        failed.append("configuration front")
+    for r in front.itertuples():
+        key = (r.threshold, r.silence_ms, r.prefix_ms)
+        expected = CONFIG_FRONT.get(key)
+        ok = expected is not None and abs(r.p_non_dominated - expected) <= 0.005
+        print(
+            f"  {'OK ' if ok else 'DEV'} P(non-dominated) {key}  "
+            f"{r.p_non_dominated:.3f}  reported {expected}"
+        )
+        if not ok:
+            failed.append(f"P(non-dominated) {key}")
     return failed
 
 
