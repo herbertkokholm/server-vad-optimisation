@@ -1,0 +1,21 @@
+{
+  "title": "server-vad-optimisation",
+  "upload_type": "software",
+  "creators": [
+    {
+      "name": "Anonymous"
+    }
+  ],
+  "description": "<p>Sweep, analysis and adaptive-tuning code, together with the per-session data, for an empirical characterisation of the server-side voice activity detection (VAD) in the OpenAI Realtime API. A face-centred Central Composite Design (19 design points, four replications, 76 sessions) varies the three exposed parameters (threshold, silence_duration_ms, prefix_padding_ms), and second-order response-surface models relate them to the interruptive false-positive rate (FPR) and endpointing latency (TL).</p><p>The repository contains the CCD sweep runner (sweep.py), the RSM and Pareto analysis pipeline (analyse_sweep.py), the robustness analyses and figure regeneration for the accompanying paper (papers/paper1/), an adaptive VAD tuner (adaptive_tuner.py), and an in-progress LLM-as-a-Judge extension (judge.py).</p><p>This release accompanies the submission \"Endpointing Latency versus Interruptive False Positives in Server-Side VAD: A Response-Surface Characterisation of a Production Speech-to-Speech API\". Running papers/paper1/make_figures.py regenerates all figures and checks every value reported in the manuscript.</p>",
+  "license": "MIT",
+  "keywords": [
+    "voice activity detection",
+    "endpointing",
+    "turn-taking",
+    "backchannels",
+    "speech-to-speech LLM",
+    "response surface methodology",
+    "OpenAI Realtime API"
+  ],
+  "access_right": "open"
+}

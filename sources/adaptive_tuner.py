@@ -26,7 +26,7 @@ Interface contract:
     - delta: minimum parameter change norm required to emit an update.
 
 Reference:
-    Algorithm 1 in the accompanying paper (paper/VAD_Optimisation_IEEE_TLT_preprint.pdf).
+    Section 8.1 of the accompanying paper (papers/paper1/).
 """
 
 import json
@@ -46,7 +46,8 @@ class ParetoModel:
 
     Populated by analyse_sweep.py once sweep data is available.
     Each point is a dict with keys: threshold, silence_duration_ms,
-    prefix_padding_ms, fpr, tl_ms.
+    prefix_padding_ms, fpr, endpointing_latency_ms (TL: silence wait +
+    speech_stopped -> first audio chunk), plus optional metadata.
     """
 
     def __init__(self, points: list[dict]):
@@ -71,7 +72,7 @@ class ParetoModel:
         points_with_scores = [
             p
             for p in self.points
-            if p.get("fpr") is not None and p.get("tl_ms") is not None
+            if p.get("fpr") is not None and p.get("endpointing_latency_ms") is not None
         ]
 
         if not points_with_scores:
@@ -79,14 +80,14 @@ class ParetoModel:
             return self.points[0]
 
         fpr_vals = [p["fpr"] for p in points_with_scores]
-        tl_vals = [p["tl_ms"] for p in points_with_scores]
+        tl_vals = [p["endpointing_latency_ms"] for p in points_with_scores]
 
         fpr_min, fpr_max = min(fpr_vals), max(fpr_vals)
         tl_min, tl_max = min(tl_vals), max(tl_vals)
 
         def score(p: dict) -> float:
             fpr_n = (p["fpr"] - fpr_min) / max(fpr_max - fpr_min, 1e-9)
-            tl_n = (p["tl_ms"] - tl_min) / max(tl_max - tl_min, 1e-9)
+            tl_n = (p["endpointing_latency_ms"] - tl_min) / max(tl_max - tl_min, 1e-9)
             return omega * fpr_n + (1 - omega) * tl_n
 
         return min(points_with_scores, key=score)
@@ -206,10 +207,13 @@ class AdaptiveVADTuner:
         ):
             return False
 
-        # Observe current FPR and TL from live event stream
+        # Observe current FPR and TL from live event stream. The collector
+        # measures latency from speech_stopped, so add the silence wait back in.
         snapshot = metrics_collector.get_run_snapshot()
         current_fpr = snapshot["openai"].get("fpr", 0.0)
-        current_tl = snapshot["openai"].get("response_latency_ms", 0.0)
+        current_tl = snapshot["openai"].get("response_latency_ms", 0.0) + (
+            self._current_config or {}
+        ).get("silence_duration_ms", 0)
 
         # Find optimal Pareto point for current omega
         target = self.pareto_model.nearest(self.omega)
@@ -256,7 +260,7 @@ class AdaptiveVADTuner:
         ranges = {
             "threshold": 0.45,  # 0.40 – 0.85
             "silence_duration_ms": 850,  # 350 – 1200
-            "prefix_padding_ms": 300,  # 200 – 500
+            "prefix_padding_ms": 300,  # 150 – 450
         }
         return sum(((a[k] - b[k]) / ranges[k]) ** 2 for k in ranges) ** 0.5
 

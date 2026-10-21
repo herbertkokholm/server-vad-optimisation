@@ -22,4 +22,4 @@ Small fixes (typos, broken imports, analysis edge cases) can go straight to a PR
 
 ## Code style
 
-This project has no linter configuration. Match the style of the file you are editing — the codebase is intentionally minimal.
+CI runs `ruff check .` and `ruff format --check .` (configuration in `pyproject.toml`); run both before opening a PR. Otherwise match the style of the file you are editing — the codebase is intentionally minimal.

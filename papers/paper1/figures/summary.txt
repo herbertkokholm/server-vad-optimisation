@@ -1,30 +1,127 @@
 VAD SWEEP ANALYSIS SUMMARY
-==================================================
-Runs included:  76
-Annotation filter: valid
+============================================================
+Sessions included: 76  (annotation filter: valid, warm-up excluded)
+Design points: 19
+Recording days: {'2026-04-23': 39, '2026-04-27': 37}
 
-Primary outcome descriptives:
-  FPR              mean=0.165  sd=0.096  min=0.000  max=0.444
-  TL (measured)    mean=776.9ms  sd=185.1  min=594.2  max=1697.0
-  Perceived latency mean=1551.9ms  sd=353.0  min=959.7  max=2601.9
+Outcome descriptives (SD with ddof = 1):
+  FPR                                mean=0.165  sd=0.096  min=0.000  max=0.444
+  TL (endpointing, ms)               mean=1551.922  sd=352.970  min=959.700  max=2601.900
+  Latency from speech_stopped (ms)   mean=776.922  sd=185.138  min=594.200  max=1697.000
 
-  NOTE: measured TL is taken from speech_stopped, which fires only after
-  server-VAD has already waited silence_duration_ms. Perceived latency adds
-  that wait back in and is the metric all latency claims rest on.
+  TL = silence_duration_ms + latency from speech_stopped. speech_stopped
+  fires only after server VAD has waited silence_duration_ms, so the
+  API-reported latency alone excludes the parameter being optimised.
 
-RSM model fit:
-  FPR model R²                = 0.3533
-  TL (measured) model R²      = 0.1446
-  Perceived latency model R²  = 0.7647
+Predictor standardisation (z-score, sample SD):
+  threshold    mean=0.625  sd=0.164
+  silence_ms   mean=775.000  sd=310.376
+  prefix_ms    mean=300.000  sd=109.545
 
-Significant RSM terms (p < 0.005, Bonferroni):
-  FPR: x2
-  TL(measured): none
-  PerceivedLatency: x2
+FPR model: R² = 0.3533 with day, 0.3532 without day   (* p < 0.005)
+  with day:
+    term                        coef                95% CI        p
+    Intercept                 0.1333   [  0.0972,   0.1694]   0.0000
+    Threshold                -0.0258   [ -0.0451,  -0.0066]   0.0093
+    Silence                  -0.0383   [ -0.0575,  -0.0190]   0.0002 *
+    Prefix                   -0.0060   [ -0.0253,   0.0132]   0.5327
+    Threshold × Silence       0.0046   [ -0.0111,   0.0203]   0.5617
+    Threshold × Prefix        0.0154   [ -0.0003,   0.0311]   0.0540
+    Silence × Prefix          0.0023   [ -0.0134,   0.0180]   0.7677
+    Threshold²                0.0069   [ -0.0200,   0.0337]   0.6103
+    Silence²                  0.0242   [ -0.0026,   0.0510]   0.0765
+    Prefix²                  -0.0001   [ -0.0269,   0.0268]   0.9967
+    Recording day             0.0022   [ -0.0362,   0.0405]   0.9110
+  without day:
+    term                        coef                95% CI        p
+    Intercept                 0.1344   [  0.1042,   0.1646]   0.0000
+    Threshold                -0.0258   [ -0.0449,  -0.0067]   0.0088
+    Silence                  -0.0382   [ -0.0573,  -0.0192]   0.0002 *
+    Prefix                   -0.0060   [ -0.0251,   0.0131]   0.5320
+    Threshold × Silence       0.0045   [ -0.0110,   0.0201]   0.5615
+    Threshold × Prefix        0.0154   [ -0.0002,   0.0310]   0.0525
+    Silence × Prefix          0.0023   [ -0.0133,   0.0179]   0.7693
+    Threshold²                0.0069   [ -0.0198,   0.0335]   0.6083
+    Silence²                  0.0242   [ -0.0025,   0.0508]   0.0744
+    Prefix²                  -0.0001   [ -0.0267,   0.0266]   0.9959
 
-Pareto-optimal runs (FPR vs perceived latency): 2 of 76
+TL model: R² = 0.7647 with day, 0.7465 without day   (* p < 0.005)
+  with day:
+    term                        coef                95% CI        p
+    Intercept              1596.9619   [1517.2601, 1676.6638]   0.0000
+    Threshold               -32.6330   [-75.0773,   9.8113]   0.1295
+    Silence                 302.4089   [259.9646, 344.8532]   0.0000 *
+    Prefix                   -5.2815   [-47.7259,  37.1628]   0.8045
+    Threshold × Silence      16.4497   [-18.2117,  51.1111]   0.3467
+    Threshold × Prefix      -15.1136   [-49.7750,  19.5478]   0.3871
+    Silence × Prefix        -20.6670   [-55.3284,  13.9944]   0.2381
+    Threshold²               -3.2068   [-62.4688,  56.0551]   0.9143
+    Silence²                 10.5265   [-48.7354,  69.7884]   0.7239
+    Prefix²                  -6.1335   [-65.3954,  53.1284]   0.8369
+    Recording day           -94.9180   [-179.6338, -10.2023]   0.0287
+  without day:
+    term                        coef                95% CI        p
+    Intercept              1549.0137   [1479.7841, 1618.2433]   0.0000
+    Threshold               -34.3659   [-78.0382,   9.3063]   0.1209
+    Silence                 300.6759   [257.0037, 344.3482]   0.0000 *
+    Prefix                   -7.0145   [-50.6867,  36.6577]   0.7495
+    Threshold × Silence      18.0317   [-17.6266,  53.6899]   0.3164
+    Threshold × Prefix      -13.5317   [-49.1899,  22.1266]   0.4514
+    Silence × Prefix        -19.0850   [-54.7432,  16.5732]   0.2891
+    Threshold²               -2.6197   [-63.6342,  58.3948]   0.9319
+    Silence²                 11.1136   [-49.9009,  72.1281]   0.7173
+    Prefix²                  -5.5464   [-66.5609,  55.4681]   0.8565
 
-Pareto front configurations:
-   threshold   silence_ms  prefix_ms      FPR   TL_meas  Perceived
-       0.625          775        300   0.0000     670.5     1445.5
-       0.625          350        300   0.0556     609.7      959.7
+Latency from speech_stopped model: R² = 0.1446 with day, 0.0787 without day   (* p < 0.005)
+  with day:
+    term                        coef                95% CI        p
+    Intercept               821.9619   [742.2601, 901.6638]   0.0000
+    Threshold               -32.6330   [-75.0773,   9.8113]   0.1295
+    Silence                  -7.9672   [-50.4115,  34.4771]   0.7090
+    Prefix                   -5.2815   [-47.7259,  37.1628]   0.8045
+    Threshold × Silence      16.4497   [-18.2117,  51.1111]   0.3467
+    Threshold × Prefix      -15.1136   [-49.7750,  19.5478]   0.3871
+    Silence × Prefix        -20.6670   [-55.3284,  13.9944]   0.2381
+    Threshold²               -3.2068   [-62.4688,  56.0551]   0.9143
+    Silence²                 10.5265   [-48.7354,  69.7884]   0.7239
+    Prefix²                  -6.1335   [-65.3954,  53.1284]   0.8369
+    Recording day           -94.9180   [-179.6338, -10.2023]   0.0287
+  without day:
+    term                        coef                95% CI        p
+    Intercept               774.0137   [704.7841, 843.2433]   0.0000
+    Threshold               -34.3659   [-78.0382,   9.3063]   0.1209
+    Silence                  -9.7002   [-53.3724,  33.9721]   0.6589
+    Prefix                   -7.0145   [-50.6867,  36.6577]   0.7495
+    Threshold × Silence      18.0317   [-17.6266,  53.6899]   0.3164
+    Threshold × Prefix      -13.5317   [-49.1899,  22.1266]   0.4514
+    Silence × Prefix        -19.0850   [-54.7432,  16.5732]   0.2891
+    Threshold²               -2.6197   [-63.6342,  58.3948]   0.9319
+    Silence²                 11.1136   [-49.9009,  72.1281]   0.7173
+    Prefix²                  -5.5464   [-66.5609,  55.4681]   0.8565
+
+Secondary outcomes:
+  IR (cancellations/min)  mean=1.125  sd=0.787  r(silence)=-0.444  p=5.9e-05
+  WebSocket RTT (ms)      mean=207.0  sd=14.3  min=180.7  max=276.1
+
+Configuration means (sessions pooled per configuration) and bootstrap non-dominance frequency (2000 resamples); the non-dominated rows are written to pareto_model.json:
+ threshold  silence_ms  prefix_ms  n   fpr  tl_ms  non_dominated  p_non_dominated
+     0.850         775        300  4 0.119 1431.8           True            0.944
+     0.850         350        450  4 0.207 1049.2           True            0.799
+     0.850        1200        150  4 0.067 2029.0           True            0.664
+     0.850         350        150  4 0.208 1081.0          False            0.523
+     0.625         775        300 20 0.126 1517.4          False            0.382
+     0.625         350        300  4 0.209 1250.3          False            0.357
+     0.400        1200        450  4 0.106 1919.9           True            0.326
+     0.625         775        150  4 0.144 1602.9          False            0.232
+     0.625         775        450  4 0.147 1553.4          False            0.069
+     0.400         350        450  4 0.264 1250.3          False            0.065
+     0.850        1200        450  4 0.140 1936.0          False            0.061
+     0.400         350        150  4 0.323 1098.6          False            0.058
+     0.400         775        300  4 0.197 1735.4          False            0.010
+     0.400        1200        150  4 0.204 1993.3          False            0.004
+     0.625        1200        300  4 0.172 1968.5          False            0.000
+
+Session-level non-dominated runs (single replications):
+ design_point  rep  threshold  silence_ms  prefix_ms    fpr  tl_ms
+           10    4      0.625         350        300 0.0556  959.7
+           14    4      0.625         775        300 0.0000 1445.5

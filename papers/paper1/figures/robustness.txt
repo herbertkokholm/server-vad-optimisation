@@ -1,0 +1,53 @@
+
+===== fpr =====
+mixed: random-intercept variance=0.0001, residual variance=0.006879, ICC=0.014
+lack of fit: SS_lof=0.023416 (df 5), SS_pe=0.42797 (df 61), F=0.668, p=0.650
+replication x recording date:
+ recording_date  2026-04-23  2026-04-27
+rep                                   
+1                       19           0
+2                       19           0
+3                        1          18
+4                        0          19
+          OLS (reported)         Mixed model (random intercept per design point)         OLS on 19 design-point means        
+                    coef       p                                            coef       p                         coef       p
+Threshold        -0.0258  0.0093                                         -0.0258  0.0088                      -0.0258  0.0376
+Silence          -0.0383  0.0002                                         -0.0383  0.0001                      -0.0382  0.0057
+Prefix           -0.0060  0.5327                                         -0.0060  0.5402                      -0.0060  0.5847
+Thr×Sil           0.0046  0.5617                                          0.0046  0.5689                       0.0046  0.6113
+Thr×Pre           0.0154  0.0540                                          0.0154  0.0553                       0.0154  0.1086
+Sil×Pre           0.0023  0.7677                                          0.0023  0.7720                       0.0023  0.7964
+Thr²              0.0069  0.6103                                          0.0069  0.6170                       0.0069  0.6533
+Sil²              0.0242  0.0765                                          0.0242  0.0788                       0.0242  0.1364
+Pre²             -0.0001  0.9967                                         -0.0001  0.9968                      -0.0001  0.9964
+
+===== tl_ms =====
+mixed: random-intercept variance=~0 (boundary), residual variance=3.383e+04, ICC=0.000
+lack of fit: SS_lof=2.1368e+05 (df 5), SS_pe=2.1547e+06 (df 61), F=1.210, p=0.315
+          OLS (reported)         Mixed model (random intercept per design point)         OLS on 19 design-point means        
+                    coef       p                                            coef       p                         coef       p
+Threshold       -32.6330  0.1295                                        -32.6330  0.1247                     -34.3659  0.0978
+Silence         302.4089  0.0000                                        302.4089  0.0000                     300.6759  0.0000
+Prefix           -5.2815  0.8045                                         -5.2815  0.8037                      -7.0145  0.7149
+Thr×Sil          16.4497  0.3467                                         16.4497  0.3432                      18.0317  0.2656
+Thr×Pre         -15.1136  0.3871                                        -15.1136  0.3839                     -13.5317  0.3962
+Sil×Pre         -20.6670  0.2381                                        -20.6670  0.2337                     -19.0850  0.2406
+Thr²             -3.2068  0.9143                                         -3.2068  0.9139                      -2.6197  0.9219
+Sil²             10.5265  0.7239                                         10.5265  0.7228                      11.1136  0.6790
+Pre²             -6.1335  0.8369                                         -6.1335  0.8362                      -5.5464  0.8358
+
+===== FPR, binomial GLM on counts =====
+binomial: Pearson dispersion = 1.025 (1 = no overdispersion), triggers per session: median 19, range 15-27
+               logit coef  OR per SD  p binomial  p quasi-binomial
+Threshold         -0.1772     0.8376      0.0116            0.0127
+Silence           -0.2536     0.7760      0.0002            0.0003
+Prefix            -0.0173     0.9829      0.8068            0.8091
+Thr×Sil            0.0084     1.0084      0.8810            0.8824
+Thr×Pre            0.0924     1.0968      0.0868            0.0907
+Sil×Pre            0.0054     1.0054      0.9218            0.9227
+Thr²               0.0377     1.0384      0.7116            0.7150
+Sil²               0.1604     1.1739      0.1036            0.1079
+Pre²              -0.0089     0.9912      0.9316            0.9325
+Recording day      0.0242     1.0245      0.8628            0.8644
+
+Bonferroni threshold: p < 0.005
